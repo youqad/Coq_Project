@@ -693,17 +693,17 @@ Print list.
 
 (** Exercice : Prouvez un lemme intéressant entre append et length *)
 
+Fixpoint rev (l : list nat) acc := match l with
+                                 | nil => acc
+                                 | cons h t => rev t (cons h acc)
+                                 end.
 
-Fixpoint append l l' :=
-   (fix aux (l1 l2: list nat) := match l1 with
-    | nil => l2
-    | cons h t => aux t (cons h l2)
-                     end)
-     ((fix rev l0 acc := match l0 with
-                        | nil => acc
-                        | cons h t => rev t (cons h acc)
-                         end)
-        l nil) l'.
+Fixpoint rev_append (l1 l2 : list nat) := match l1 with
+                             | nil => l2
+                             | cons h t => rev_append t (cons h l2)
+                             end.
+
+Definition append l l' := rev_append (rev l nil) l'.
 
 Fixpoint length (l : list nat) :=
   match l with
@@ -717,22 +717,38 @@ Proof.
   intros.
   induction l.
   now simpl.
-
-  
-  Qed.
+Admitted.
 
 Lemma append_len : forall (l l' : list nat), length (append l l') = length l + length l'.
 Proof.
   intros.
   induction l.
   now simpl.
-  cut (append (a::l) l' = a :: (append l l')).
+  cut (length (append (a::l) l') = 1 + length (append l l')).
   intro.
   rewrite H; simpl; now rewrite IHl.
   induction l.
   now simpl.
-
+  cut (forall l1 l2, length (rev l1 l2) = length l1 + length l2).
+  intros.
+  unfold append.
+  cut (forall l3 l4, length (rev_append l3 l4) = length l3 + length l4).
+  intros.
+  repeat rewrite H0; now simpl.
+  intro l3.
+  induction l3.
+  now simpl.
+  simpl.
+  intro l4.
+  rewrite IHl3.
+  now simpl.
+  induction l1.
+  now simpl.
+  simpl.
+  intro l2.
+  rewrite IHl1; now simpl.
 Qed.
+
 (** Avant de passer à la suite, il me reste à vous montrer une tactique qui peut s'avérer très utile en Coq : inversion. Supposons que vous souhaitez démontrer le lemme suivant : *)
 
 Lemma trivial10 : forall x , x = 0 -> x + x = x.
@@ -784,6 +800,8 @@ Check and.
 
 Print and.
 
+Print conj.
+
 (** conj est le seul constructeur de and. Maintenant, comment on voudrait pouvoir éliminer un and en projettant. Cela revient par exemple à prouver le lemme suivant : *)
 
 Lemma proj1 : forall A B : Prop, A /\ B -> A.
@@ -819,6 +837,26 @@ Qed.
 
 (** Exercice : Définissez un type inductif pour le "il existe". *)
 
+Print or.
+
+Inductive my_or (A B : Prop) : Prop :=
+| or_left : A -> my_or A B
+| or_right : B -> my_or A B.
+
+
+Lemma elim_my_or : forall (A B C : Prop), my_or A B -> (A -> C) -> (B -> C) -> C.
+Proof.
+  intros.
+  destruct H.
+  apply H0; easy.
+  apply H1; easy.
+Qed.
+
+Locate "exists".
+Print ex.
+
+Inductive my_exists (A : Type -> Prop) : Prop := exists_el : forall x, A x -> my_exists A.
+
 (** Cependant, la définition de ces connecteurs n'est pas unique. Par exemple : *)
 
 Definition my_and (A B : Prop) := forall z:Prop, (A -> B -> z) -> z.
@@ -831,17 +869,47 @@ Lemma cons_my_and : forall (A B : Prop), A -> B -> my_and A B.
 Proof.
   intros A B HA HB.
   unfold my_and.
-Admitted.
+  intros.
+  apply H.
+  easy.
+  easy.
+Qed.
 
 Lemma my_and_proj1 : forall (A B : Prop), my_and A B -> A.
 Proof.
   intros A B H.
   unfold my_and in H.
-Admitted.
+  apply H; easy.
+Qed.
 
 (** Exercice : Sans utiliser les types inductifs et seulement à l'aide du pour tout et de l'implication, créez une nouvelle définition my_or avec le comportement souhaité *)
 
 (** Exercice : Dans le même esprit faites pareil avec la négation *)
+
+
+Definition my_or2 (A B : Prop) : Prop := forall x:Prop, (A -> x) -> (B -> x) -> x.
+
+Lemma equiv_or : forall (A B : Prop), A \/ B <-> my_or2 A B.
+Proof.
+  split.
+  unfold my_or2.
+  intros.
+  destruct H.
+  apply H0; easy.
+  apply H1; easy.
+  unfold my_or2.
+  intros.
+  apply H with (x:=A\/B).
+  intros; left; easy.
+  intros; right; easy.
+Qed.
+
+Definition my_not (A : Prop) : Prop := A -> False.
+
+Lemma equiv_not : forall (A : Prop), ~A <-> my_not A.
+Proof.
+  easy.
+Qed.
 
 (** Conclusion :
      - On a vu une définition possible des connecteurs logiques dans Coq, c'est celle qui est utilisée dans quasiment tous les développements
