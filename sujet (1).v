@@ -189,6 +189,8 @@ Proof.
 
   (** La tactique reflexivity permet de résoudre des buts de la forme x = x, ce qui est notre cas. Dans Emacs ou bien CoqIde, cette tectique est coloriée en rouge. Cela veut dire qu'elle résoud un but et que si elle n'y arrive pas elle échoue. Par exemple tentez la tactique suivante (en enlevant la commande Fail) *)
 
+  Fail contradiction.
+
   (** il existe une autre tactique un peu plus général -- easy -- qui permet aussi de résoudre ce but *)
 
   Restart.
@@ -269,40 +271,22 @@ Qed.
 (** Avec ce petit ensemble de tactiques, vous pouvez vous exercez à prouver les formules suivantes. Remplacez le Admitted par votre preuve *)
 
 Example example0 : forall A B, A -> B -> A.
-Proof.
-    intros A B a b.
-    assumption.
-Qed.
+Admitted.
 
 Example example1 : forall A, A -> A -> A.
-Proof.
-    intros A x y.
-    assumption.
-Qed.
+Admitted.
 
 Example example2 : forall A B C, (A -> B -> C) -> A -> B -> C.
-Proof.
-    intros A B C H a b.
-    apply H ; assumption.
-Qed.
+Admitted.
 
 Example example3 : forall A B C (H:A -> B -> C) (HA:A) (HB:B), C.
-Proof.
-    intros A B C H a b.
-    apply H ; assumption.
-Qed.
+Admitted.
 
 Example example4 : forall n, (forall m, m = 0) -> n = 0.
-Proof.
-    intros n H.
-    apply H.
-Qed.
+Admitted.
 
 Example example5 : (forall P, P) -> False.
-Proof.
-    intros P.
-    apply P.
-Qed.
+Admitted.
 
 (** Conclusion :
     - Le mode de preuve interactif permet de construire un terme de preuve pas à pas
@@ -399,7 +383,7 @@ Proof.
 
   (** simpl est une tactique très pratique qui comme son nom l'indique permet de simplifier des buts. Comment on va dire à Coq qu'il est possible de résoudre ce but ? On va utiliser des lemmes. Heureusement ils ont déjà été prouvés pour nous. Mais comment trouver le nom de ces lemmes ? Pour cela on va utiliser la commande Search. Cette commande prend ou bien un nom en paramètre, ou bien un _pattern_.  *)
 
-  SearchAbout "plus".
+  Search "plus".
   Search "add".
   Search (_ + 0).
   Search (_ (_ + _) = (_ + _) + _).
@@ -476,8 +460,8 @@ Check nat_ind.
 
 Fixpoint plus (n m:nat) : nat :=
   match n with
-  | O => m
-  | S k => S (plus k m)
+  | O => n
+  | S n => S (plus n m)
   end.
 
 (** On peut matcher sur les types inductifs comme on a l'habitude de le faire en OCaml. En Coq, une des façons de calculer provient directement du pattern-matching : *)
@@ -485,8 +469,6 @@ Fixpoint plus (n m:nat) : nat :=
 Eval compute in (plus (S (S O)) O).
 
 Eval compute in (plus (S O) (S O)).
-
-Print Nat.add.
 
 (** Quand on fait un match n with et que n est une valeur, alors Coq sait automatiquement dans quelle branche on est et donc réduire le terme de départ n. C'est ce qui explique la _bizarrerie_ que l'on a observée tout à l'heure avec n + 0 = n . n n'étant pas une valeur, Coq ne sait pas s'il doit passer dans la première branche ou bien dans la seconde. Donc n + 0 est déjà en _forme_normale_ . Cependant, il est possible de _prouver_ que n + 0 = n. *)
 
@@ -528,17 +510,6 @@ Qed.
 
 (** On va chercher à prouver la commutativité de l'addition *)
 
-Lemma S_plus_comm : forall n m, n + Datatypes.S m = Datatypes.S (n+m).
-Proof.
-  intros n m.
-  induction n.
-  simpl.
-  reflexivity.
-  simpl.
-  rewrite -> IHn.
-  reflexivity.
-Qed.
-
 Lemma plus_comm : forall n m, n + m = m + n.
 Proof.
   intros n m.
@@ -566,112 +537,25 @@ Proof.
   simpl.
   rewrite IHn.
 
-  cut (m + Datatypes.S n = Datatypes.S (m+n)).
-  easy.
-  apply S_plus_comm.
-
   (** et là on est à nouveau bloqué ! *)
-Qed.
+Abort.
 
 
 (** Exercice : trouvez le lemme manquant et prouvez la commutativité de l'addition *)
 
 (** Exercices : *)
 
-Lemma zero_plus : forall p, p + 0 = p.
-Proof.
-  intro; rewrite plus_comm; easy.
-Qed.
-
 Lemma plus_assoc : forall n m o, n + (m + o) = (n + m) + o.
-Proof.
-  intros.
-  induction o.
-  pose proof zero_plus.
-  pose proof S_plus_comm.
-  now repeat rewrite zero_plus. 
-  repeat rewrite S_plus_comm; now rewrite IHo.
-Qed.
-
-Locate "*".
-Print Init.Nat.mul.
-
-(* Parameter m :Datatypes.nat. *)
-(* Eval compute in m*0. *)
-
-Lemma times_right : forall p q, p * Datatypes.S q = p + p*q.
-Proof.
-  intros.
-  induction p.
-  easy.
-  simpl.
-  rewrite IHp.
-  repeat rewrite plus_assoc.
-  now rewrite (plus_comm q).
-Qed.
+Admitted.
 
 Lemma times_comm : forall n m, n * m = m * n.
-Proof.
-  intros.
-  induction n.
-  simpl.
-  induction m.
-  easy.
-  now simpl.
-  simpl.
-  rewrite IHn.
-  now rewrite times_right.
-Qed.
-
-Lemma times_zero : forall n, n*0 = 0.
-Proof.
-  intro; induction n.
-  easy.
-  simpl; assumption.
-Qed.
-
-
-Lemma plus_distr_l : forall n m o, n * (m + o) = (n * m) + (n*o).
-Proof.
-  intros.
-  induction n.
-  now simpl.
-  repeat simpl.
-  repeat rewrite plus_assoc.
-  rewrite (plus_comm (m + n*m)).
-  rewrite plus_assoc.
-  rewrite IHn.
-  rewrite (plus_comm m).
-  now repeat rewrite plus_assoc.
-Qed.
+Admitted.
 
 Lemma times_assoc : forall n m o, n * (m * o) = (n * m) * o.
-Proof.
-  intros.
-  induction o.
-  induction n.
-  induction m.
-  repeat easy.
-  now repeat simpl.
-  repeat simpl.
-  now repeat rewrite times_zero.
-  repeat rewrite times_right.
-  rewrite plus_distr_l.
-  now rewrite IHo.
-Qed.
+Admitted.
 
-Lemma plus_distr_r : forall n m o, (m + o) * n = (m * n) + (o*n).
-Proof.
-  intros.
-  induction n.
-  now repeat rewrite times_zero.
-  repeat rewrite times_right; rewrite IHn.
-  rewrite (plus_comm m).
-  rewrite (plus_comm (o) (o*n)).
-  repeat rewrite plus_assoc.
-  rewrite (plus_comm _ o).
-  now repeat rewrite plus_assoc.
-Qed.
+Lemma plus_distr_r : forall n m o, (n + m) * o = (n * o) + (m * o).
+Admitted.
 
 (** Les listes existent aussi en Coq *)
 
@@ -693,46 +577,6 @@ Print list.
 
 (** Exercice : Prouvez un lemme intéressant entre append et length *)
 
-
-Fixpoint append l l' :=
-   (fix aux (l1 l2: list nat) := match l1 with
-    | nil => l2
-    | cons h t => aux t (cons h l2)
-                     end)
-     ((fix rev l0 acc := match l0 with
-                        | nil => acc
-                        | cons h t => rev t (cons h acc)
-                         end)
-        l nil) l'.
-
-Fixpoint length (l : list nat) :=
-  match l with
-  | nil => 0
-  | cons h t => 1 + length t
-  end.
-
-
-Lemma app_lemma : forall a l l', append (a::l) l' = a :: (append l l').
-Proof.
-  intros.
-  induction l.
-  now simpl.
-
-  
-  Qed.
-
-Lemma append_len : forall (l l' : list nat), length (append l l') = length l + length l'.
-Proof.
-  intros.
-  induction l.
-  now simpl.
-  cut (append (a::l) l' = a :: (append l l')).
-  intro.
-  rewrite H; simpl; now rewrite IHl.
-  induction l.
-  now simpl.
-
-Qed.
 (** Avant de passer à la suite, il me reste à vous montrer une tactique qui peut s'avérer très utile en Coq : inversion. Supposons que vous souhaitez démontrer le lemme suivant : *)
 
 Lemma trivial10 : forall x , x = 0 -> x + x = x.
