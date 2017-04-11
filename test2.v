@@ -25,15 +25,15 @@ Fixpoint sort (l: list nat) : list nat :=
         | h::t => insert h (sort t)
     end.
 
-(* Definition is_sorted (l:list nat) : Prop := forall x y, x<y -> y < length l -> nth x l 0 <= nth y l 0. *)
+(* Definition sorted (l:list nat) : Prop := forall x y, x<y -> y < length l -> nth x l 0 <= nth y l 0. *)
 
 Print List.hd.
 Print bool.
 
-Inductive is_sorted : list nat -> Prop :=
-| nil_sorted : is_sorted nil
-| sing_sorted : forall x, is_sorted (x :: nil)
-| list_sorted : forall h h' t, le h h' -> is_sorted (h'::t) -> is_sorted (h::(h'::t)).
+Inductive sorted : list nat -> Prop :=
+| nil_sorted : sorted nil
+| sing_sorted : forall x, sorted (x :: nil)
+| list_sorted : forall h h' t, le h h' -> sorted (h'::t) -> sorted (h::(h'::t)).
 
 Print fold_left.
 Print nth.
@@ -41,10 +41,10 @@ Print nth.
 Definition count (l:list nat) (x:nat) : nat := fold_left (fun c h => if Nat.eqb h x then c+1 else c) l 0.
 
 
-Definition are_shuffled (l:list nat) (l':list nat): Prop 
+Definition permuted (l:list nat) (l':list nat): Prop 
   := forall x, count l x = count l' x.
 
-Lemma is_sorted_inv : forall l a, is_sorted (a::l) -> is_sorted l.
+Lemma is_sorted_inv : forall l a, sorted (a::l) -> sorted l.
 Proof.
   intros.
   inversion H.
@@ -57,7 +57,7 @@ Print Nat.ltb_lt.
 Locate "<?".
 Print lt.
 
-Lemma insert_hd : forall l x, is_sorted l -> hd 0 (insert x l) = x \/ hd 0 (insert x l) = hd 0 l.
+Lemma insert_hd : forall l x, sorted l -> hd 0 (insert x l) = x \/ hd 0 (insert x l) = hd 0 l.
 Proof.
   intros.
   inversion H.
@@ -72,7 +72,7 @@ Proof.
   now left.
 Qed.
 
-Lemma insert_sort : forall (l: list nat), (is_sorted l) -> forall (x : nat), is_sorted (insert x l).
+Lemma insert_sort : forall (l: list nat), (sorted l) -> forall (x : nat), sorted (insert x l).
 Proof.
   pose proof Nat.ltb_lt as ltb_lt.
   pose proof Nat.ltb_nlt as ltb_nlt.
@@ -81,8 +81,8 @@ Proof.
   intros.
   induction l.
   simpl; constructor.
-  (* -- is_sorted (insert x l) -- *)
-  assert (is_sorted (insert x l)).
+  (* -- sorted (insert x l) -- *)
+  assert (sorted (insert x l)).
   apply is_sorted_inv in H.
   now apply IHl in H.
   (* ---------------------------- *)
@@ -229,7 +229,7 @@ Qed.
 
 Search "neq".
 
-Lemma sort_shuffled : forall (l : list nat), are_shuffled l (sort l).
+Lemma sort_shuffled : forall (l : list nat), permuted l (sort l).
 Proof.
   pose proof Nat.eqb_eq as eqb_eq.
   pose proof Nat.eqb_neq as eqb_neq.
@@ -239,7 +239,7 @@ Proof.
   pose proof Nat.neq_sym as neq_sym.
   induction l.
   easy.
-  unfold are_shuffled.
+  unfold permuted.
   simpl.
   intros.
   case (eq_dec x a).
@@ -262,7 +262,7 @@ Proof.
 Qed.
 
 
-Lemma well_sorted : forall (l : list nat), is_sorted (sort l).
+Lemma well_sorted : forall (l : list nat), sorted (sort l).
 Proof.
     intro l.
     induction l.
