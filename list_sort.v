@@ -229,7 +229,7 @@ Qed.
 
 Search "neq".
 
-Lemma sort_shuffled : forall (l : list nat), permuted l (sort l).
+Theorem sort_permuted : forall (l : list nat), permuted l (sort l).
 Proof.
   pose proof Nat.eqb_eq as eqb_eq.
   pose proof Nat.eqb_neq as eqb_neq.
@@ -262,7 +262,7 @@ Proof.
 Qed.
 
 
-Lemma well_sorted : forall (l : list nat), sorted (sort l).
+Theorem well_sorted : forall (l : list nat), sorted (sort l).
 Proof.
     intro l.
     induction l.
