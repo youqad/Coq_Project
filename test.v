@@ -712,12 +712,6 @@ Fixpoint length (l : list nat) :=
   end.
 
 
-Lemma app_lemma : forall a l l', append (a::l) l' = a :: (append l l').
-Proof.
-  intros.
-  induction l.
-  now simpl.
-Admitted.
 
 Lemma append_len : forall (l l' : list nat), length (append l l') = length l + length l'.
 Proof.
