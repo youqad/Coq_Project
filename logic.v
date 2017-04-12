@@ -52,6 +52,27 @@ Proof.
   contradiction.  
 Qed.
 
+Theorem implic_classique_eq_tiers_ex : implic_classique <-> tiers_excl.
+Proof.
+  unfold implic_classique, tiers_excl.
+  split.
+  intros.
+  cut (~p \/ p).
+  intro.
+  destruct H0.
+  now right.
+  now left.
+  now apply -> (H p p).
 
-
+  intros.
+  split.
+  intro.
+  destruct (H p).
+  apply H0 in H1; now right.
+  now left.
+  intros.
+  destruct H0.
+  contradiction.
+  assumption.
+Qed.
 
