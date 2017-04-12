@@ -137,6 +137,7 @@ Lemma hg_zero : forall n, h n = Zero <-> g n = 0.
 Proof.
   pose proof Nat.neq_mul_0 as neq_zero.
   pose proof Nat.eq_mul_0 as eq_zero.
+  pose proof Nat.add_comm as add_comm.
   split.
   (* => *)
   induction n.
@@ -182,7 +183,11 @@ Proof.
       easy.
       easy.
       easy.
-    
+    intros.
+    simpl in H.
+    rewrite (add_comm _ 1) in H.
+    discriminate H.
+Qed.
 
 Lemma fgh_h : forall n, h n <> Zero -> f (g (h n)) = h n.
 Proof.
