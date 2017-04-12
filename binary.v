@@ -88,4 +88,29 @@ Proof.
 Qed.
 
 
+Eval compute in f (g (Double Zero)).
+
+Fixpoint h (n : bin) :=
+  match n with
+  | Zero => Zero
+  | Double Zero => Zero
+  | Double m  => Double (h m)
+  | DoubleOne m => DoubleOne (h m)
+  end.
+
+Theorem gh_h : forall n, g (h n) = g n.
+Proof.
+  induction n.
+  easy.
+  unfold h; fold h.
+  unfold g; fold g.
+  rewrite <- IHn.
+  case n.
+  easy.
+  unfold g; now fold g.
+  unfold g; now fold g.
+  unfold h; fold h.
+  unfold g; fold g.
+  now rewrite IHn.
+Qed.
 
