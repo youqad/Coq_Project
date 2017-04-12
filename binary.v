@@ -242,7 +242,7 @@ Qed.
 
 Search "<".
 
-Lemma fgh_h : forall n, h n <> Zero -> f (g (h n)) = h n.
+Lemma fgh_h_notZero : forall n, h n <> Zero -> f (g (h n)) = h n.
 Proof.
   pose proof Nat.mod_mul as mod_mul.
   pose proof Nat.mul_comm as mul_comm.
@@ -338,4 +338,21 @@ Proof.
   rewrite H3.
   reflexivity.
   rewrite H3; discriminate.
+Qed.
+
+Theorem fgh_h : forall n, f (g (h n)) = h n.
+Proof.
+  intro.
+  case_eq (h n).
+  easy.
+  intros.
+  assert (h n <> Zero).
+  rewrite H; discriminate.
+  rewrite <- H.
+  now apply fgh_h_notZero.
+  intros.
+  assert (h n <> Zero).
+  rewrite H; discriminate.
+  rewrite <- H.
+  now apply fgh_h_notZero.
 Qed.
