@@ -8,7 +8,7 @@ Inductive bin : Set :=
 | DoubleOne : bin -> bin.
 
 Locate "mod".
-Search "<".
+Search "mod".
 Print Nat.divmod.
 
 Lemma lt_div2 : forall m, S m/2 < S m.
@@ -25,7 +25,7 @@ Qed.
 Function f (n : nat) {measure  (fun (x:nat) => x)} :=
   match n with
   | 0 => Zero
-  | S m => if m mod 2 =? 0 then Double (f (S m/2))
+  | S m => if (S m) mod 2 =? 0 then Double (f (S m/2))
           else DoubleOne (f (S m/2))
   end.
 
@@ -33,6 +33,7 @@ intros.
 now apply lt_div2.
 intros.
 now apply lt_div2.
+Defined.
 
 Fixpoint g (n : bin) :=
   match n with
@@ -40,6 +41,51 @@ Fixpoint g (n : bin) :=
   | Double m => 2 * g m
   | DoubleOne m => (2*g m) + 1
   end.
+
+
+Theorem gf_id : forall n, g (f n) = n.
+Proof.
+  pose proof Nat.div_mod as div_mod.
+  pose proof Nat.eqb_eq as eqb_eq.
+  pose proof Nat.eqb_neq as eqb_neq.
+  pose proof Nat.add_comm as add_comm.
+  pose proof Nat.mod_upper_bound as mod_upper_bound.
+  induction n.
+  easy.
+  functional induction (f (S n)).
+  easy.
+  unfold g; fold g.
+  rewrite IHb.
+  apply eqb_eq in e0.
+  assert (S m = 2 * (S m / 2) + S m mod 2).
+  apply (div_mod (S m) 2).
+  easy.
+  rewrite e0 in H.
+  rewrite (add_comm _ 0) in H.
+  assert (forall p, 0 + p = p).
+  easy.
+  now rewrite H0 in H.
+  unfold g; fold g.
+  rewrite IHb.
+  apply eqb_neq in e0.
+  assert (S m mod 2 = 1).
+    case_eq (S m mod 2).
+    intro; contradiction.
+    intro.
+    assert (S m mod 2 < 2).
+    now apply (mod_upper_bound (S m) 2).
+    intro.
+    rewrite H0 in H.
+    rewrite H0 in e0.
+    inversion H.
+    reflexivity.
+    inversion H2.
+    inversion H4.
+  assert (S m = 2 * (S m / 2) + S m mod 2).
+  apply (div_mod (S m) 2).
+  easy.
+  now rewrite H in H0.
+Qed.
 
 
 
