@@ -25,8 +25,8 @@ Qed.
 Function f (n : nat) {measure  (fun (x:nat) => x)} :=
   match n with
   | 0 => Zero
-  | S m => if (S m) mod 2 =? 0 then Double (f (S m/2))
-          else DoubleOne (f (S m/2))
+  | n => if n mod 2 =? 0 then Double (f (n/2))
+          else DoubleOne (f (n/2))
   end.
 
 intros.
@@ -57,8 +57,8 @@ Proof.
   unfold g; fold g.
   rewrite IHb.
   apply eqb_eq in e0.
-  assert (S m = 2 * (S m / 2) + S m mod 2).
-  apply (div_mod (S m) 2).
+  assert (n0 = 2 * (n0 / 2) + n0 mod 2).
+  apply (div_mod n0 2).
   easy.
   rewrite e0 in H.
   rewrite (add_comm _ 0) in H.
@@ -68,12 +68,12 @@ Proof.
   unfold g; fold g.
   rewrite IHb.
   apply eqb_neq in e0.
-  assert (S m mod 2 = 1).
-    case_eq (S m mod 2).
+  assert (n0 mod 2 = 1).
+    case_eq (n0 mod 2).
     intro; contradiction.
     intro.
-    assert (S m mod 2 < 2).
-    now apply (mod_upper_bound (S m) 2).
+    assert (n0 mod 2 < 2).
+    now apply (mod_upper_bound n0 2).
     intro.
     rewrite H0 in H.
     rewrite H0 in e0.
@@ -81,8 +81,8 @@ Proof.
     reflexivity.
     inversion H2.
     inversion H4.
-  assert (S m = 2 * (S m / 2) + S m mod 2).
-  apply (div_mod (S m) 2).
+  assert (n0 = 2 * (n0 / 2) + n0 mod 2).
+  apply (div_mod n0 2).
   easy.
   now rewrite H in H0.
 Qed.
@@ -189,11 +189,75 @@ Proof.
     discriminate H.
 Qed.
 
+Lemma h_zero : forall n, h (Double n) = Zero <-> h n = Zero.
+Proof.
+  pose proof Nat.neq_mul_0 as neq_zero.
+  pose proof Nat.eq_mul_0 as eq_zero.
+  pose proof Nat.add_comm as add_comm.
+  split.
+  (* => *)
+  intros.
+  apply hg_zero in H.
+  unfold g in H; fold g in H.
+  apply eq_zero in H.
+  assert (g n = 0).
+  destruct H.
+  discriminate.
+  assumption.
+  now rewrite <- hg_zero in H0.
+  (* <= *)
+  intros.
+  apply hg_zero in H.
+  assert (2 * g n = 0).
+  apply eq_zero; now right.
+  assert (g (Double n) = 0).
+  unfold g; now fold g.
+  now apply hg_zero.
+Qed.
+
+Lemma contrapositive: forall (P Q:Prop), (P -> Q) -> (~Q -> ~P).
+Proof.
+  intros.
+  intro.
+  apply H0; now apply H.
+Qed.
+
+Lemma hg_zero2 : forall n, h n <> Zero -> g n <> 0.
+Proof.
+  intro.
+  assert (g n = 0 -> h n = Zero).
+  apply hg_zero.
+  now apply (contrapositive (g n = 0) _).
+Qed.
+
+Lemma h_zero2 : forall n, h (Double n) <> Zero -> h n <> Zero.
+Proof.
+  intro.
+  assert (h n = Zero -> h (Double n) = Zero).
+  now apply h_zero.
+  now apply (contrapositive (h n = Zero)).
+Qed.
+
+
+
+Search "<".
+
 Lemma fgh_h : forall n, h n <> Zero -> f (g (h n)) = h n.
 Proof.
   pose proof Nat.mod_mul as mod_mul.
   pose proof Nat.mul_comm as mul_comm.
+  pose proof Nat.add_comm as add_comm.
   pose proof Nat.neq_mul_0 as neq_zero.
+  pose proof Nat.eqb_refl as eqb_refl.
+  pose proof Nat.div_mod as div_mod.
+  pose proof Nat.add_0_l as zero_plus.
+  pose proof Nat.div_mul as div_mul.
+  pose proof Nat.mod_add as mod_add.
+  pose proof Nat.eqb_neq as eqb_neq.
+  pose proof Nat.div_unique as div_unique.
+  pose proof Lt.lt_n_S as lt_n_S.
+  pose proof Nat.lt_succ_diag_r as gt_succ.
+
   intro.
   rewrite gh_h.
   induction n.
@@ -208,23 +272,70 @@ Proof.
   cut (g n <> 0).
   intro.
   now apply neq_zero.
-
-  functional induction (f (2 * (g n))).
-
-  easy.
-  rewrite H.
-  case_eq n.
-  now simpl.
+  cut (h n <> Zero).
+  apply hg_zero2.
+  now apply h_zero2 in H0.
+  rewrite H; rewrite eqb_refl.
+  case_eq (2 * g n).
+  intro.
+  contradiction.
   intros.
-  simpl.
-  rewrite <- H.
+  assert ((2 * g n)/2 = g n).
+  rewrite (mul_comm 2 _).
+  now apply div_mul.
+  rewrite <- H2.
+  rewrite H3.
+  assert (h n <> Zero).
+  now apply h_zero2 in H0.
   rewrite IHn.
-  unfold h.
-  case n.
-  easy.
-  unfold g; now fold g.
-  unfold g; now fold g.
   unfold h; fold h.
+  case_eq n.
+  intro.
+  rewrite H5 in H4; simpl in H4.
+  contradiction.
+  intros.
+  case_eq (h (Double b)).
+  intro.
+  rewrite <- H5 in H6; contradiction.
+  easy.
+  easy.
+  easy.
+  easy.
+  intro.
   unfold g; fold g.
-  now rewrite IHn.
+  unfold h; fold h.
+  rewrite f_equation.
+  assert ((2 * (g n) + 1) mod 2 <> 0).
+  rewrite add_comm.
+  rewrite mul_comm.
+  now rewrite mod_add.
+  apply eqb_neq in H0.
+  rewrite H0.
+  case_eq (2* g n +1).
+  intro.
+  rewrite add_comm in H1.
+  discriminate H1.
+  intros.
+  assert (g n = (2 * g n + 1) / 2).
+  apply (div_unique (2 * g n + 1) 2 (g n) 1).
+  cut (0 < 1).
+  apply lt_n_S.
+  apply gt_succ.
+  easy.
+  rewrite <- H1.
+  rewrite <- H2.
+  case_eq (h n).
+  intro.
+  apply hg_zero in H3.
+  now rewrite H3.
+  intros.
+  rewrite IHn.
+  rewrite H3.
+  reflexivity.
+  rewrite H3; discriminate.
+  intros.
+  rewrite IHn.
+  rewrite H3.
+  reflexivity.
+  rewrite H3; discriminate.
 Qed.
