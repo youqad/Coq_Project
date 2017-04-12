@@ -94,7 +94,7 @@ Fixpoint h (n : bin) :=
   match n with
   | Zero => Zero
   | Double Zero => Zero
-  | Double m  => Double (h m)
+  | Double m  => h (Double (h m))
   | DoubleOne m => DoubleOne (h m)
   end.
 
@@ -114,3 +114,38 @@ Proof.
   now rewrite IHn.
 Qed.
 
+Lemma fgh_h : forall n, h n <> Zero -> f (g (h n)) = h n.
+Proof.
+  pose proof Nat.mod_mul as mod_mul.
+  pose proof Nat.mul_comm as mul_comm.
+  intro.
+  rewrite gh_h.
+  induction n.
+  easy.
+  unfold g; fold g.
+  assert (2 * (g n) mod 2 = 0).
+  rewrite mul_comm.
+  now apply mod_mul.
+  rewrite f_equation.
+  intro.
+  assert (2 * g n <> 0).
+
+  functional induction (f (2 * (g n))).
+
+  easy.
+  rewrite H.
+  case_eq n.
+  now simpl.
+  intros.
+  simpl.
+  rewrite <- H.
+  rewrite IHn.
+  unfold h.
+  case n.
+  easy.
+  unfold g; now fold g.
+  unfold g; now fold g.
+  unfold h; fold h.
+  unfold g; fold g.
+  now rewrite IHn.
+Qed.
