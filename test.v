@@ -876,6 +876,8 @@ Proof.
   apply H; easy.
 Qed.
 
+Print cons_my_and.
+Print my_and_proj1.
 (** Exercice : Sans utiliser les types inductifs et seulement à l'aide du pour tout et de l'implication, créez une nouvelle définition my_or avec le comportement souhaité *)
 
 (** Exercice : Dans le même esprit faites pareil avec la négation *)
@@ -897,6 +899,8 @@ Proof.
   intros; left; easy.
   intros; right; easy.
 Qed.
+
+Print equiv_or.
 
 Definition my_not (A : Prop) : Prop := A -> False.
 

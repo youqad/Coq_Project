@@ -52,6 +52,8 @@ Proof.
   contradiction.  
 Qed.
 
+Print double_neg_eq_tiers_ex.
+
 Theorem implic_classique_eq_tiers_ex : implic_classique <-> tiers_excl.
 Proof.
   unfold implic_classique, tiers_excl.
